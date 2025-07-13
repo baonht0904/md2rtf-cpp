@@ -5,7 +5,7 @@
 
 namespace md2rtf
 {
-    std::string convert_md_to_rtf(const std::string& markdown);
+    std::string ConvertMdToRtf(const std::string& markdown);
 
 } // namespace md2rtf
 
