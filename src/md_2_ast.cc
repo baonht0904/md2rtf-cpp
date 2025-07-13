@@ -33,7 +33,7 @@ namespace md2rtf::internal
         return ast;
     }
 
-    std::string FindNextLine(const std::string& markdown, size_t startPos = 0)
+    std::string FindNextLine(const std::string& markdown, size_t startPos)
     {
         size_t nextNewline = markdown.find('\n', startPos);
         if (nextNewline == std::string::npos)

@@ -17,16 +17,15 @@ TEST(MD2AST_BASIC_TEST, DetermineNodeType) {
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("* Item 2"), NodeType::List);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("+ Item 3"), NodeType::List);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("1. Item 1"), NodeType::List);
-    EXPECT_EQ(AstNodeFactory::DetermineNodeType("> Blockquote"), NodeType::Blockquote);
     
     // Horizontal rules
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("---"), NodeType::HorizontalRule);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("___"), NodeType::HorizontalRule);
-    
-    // Tables
+    EXPECT_EQ(AstNodeFactory::DetermineNodeType("***"), NodeType::HorizontalRule);
+
+    // Blocks
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |"), NodeType::Table);
-    
-    // Code
+    EXPECT_EQ(AstNodeFactory::DetermineNodeType("> Blockquote"), NodeType::Blockquote);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("```cpp\nint main() {}\n```"), NodeType::CodeBlock);
 
     // Inline-level
@@ -36,6 +35,8 @@ TEST(MD2AST_BASIC_TEST, DetermineNodeType) {
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("__Bold text__"), NodeType::Emphasis);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("~~Strikethrough~~"), NodeType::Emphasis);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("`inline code`"), NodeType::InlineCode);
+
+    // Links and images
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("[Link text](http://example.com)"), NodeType::Link);
     EXPECT_EQ(AstNodeFactory::DetermineNodeType("![Alt text](image.png)"), NodeType::Image);
 }

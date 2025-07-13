@@ -42,7 +42,7 @@ namespace md2rtf::internal::markdown_ast
     class HeadingNode : public Node {
     public:
         int level;
-        HeadingNode(int lvl) : level(lvl) { type = NodeType::Heading; }
+        HeadingNode(int lvl = 1) : level(lvl) { type = NodeType::Heading; }
     };
 
     class ParagraphNode : public Node {
@@ -65,7 +65,8 @@ namespace md2rtf::internal::markdown_ast
     class ListNode : public Node {
     public:
         ListType listType;
-        ListNode(ListType lt) : listType(lt) { type = NodeType::List; }
+        int level;
+        ListNode(ListType lt, int lvl = 0) : listType(lt), level(lvl) { type = NodeType::List; }
     };
 
     class ListItemNode : public Node {
