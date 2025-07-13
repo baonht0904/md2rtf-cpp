@@ -10,7 +10,7 @@ if not exist %BUILD_DIR% (
 cd %BUILD_DIR%
 
 cmake -G "MinGW Makefiles" ..
-mingw32-make
+cmake --build .
 
 @REM if %ERRORLEVEL% EQU 0 (
 @REM     echo Build succeeded. Running tests...

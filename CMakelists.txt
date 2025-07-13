@@ -4,10 +4,27 @@ project(md2rtf-cpp VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Set output directory for binaries
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+
+# Clean output directory before build
+add_custom_target(clean_output
+    COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/output/*
+    COMMENT "Cleaning output directory"
+)
+
+add_custom_target(pre_build ALL
+    DEPENDS clean_output
+)
+
 # Add source files (*.cc)
 file(GLOB SOURCES src/*.cc)
 
 add_library(md2rtf-cpp SHARED ${SOURCES})
+
+add_dependencies(md2rtf-cpp pre_build)
 
 # Include directories
 target_include_directories(md2rtf-cpp PRIVATE src include)
