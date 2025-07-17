@@ -18,16 +18,7 @@ namespace md2rtf::internal
         size_t pos = 0;
         while (pos < markdown.length())
         {
-            std::string line = FindNextLine(markdown, pos);
-            pos += line.length() + 1; // +1 for the newline character
-            if (line.empty())
-                continue;
-
-            std::shared_ptr<Node> node = AstNodeFactory::CreateNode(line);
-            if (node)
-            {
-                ast.root->children.push_back(node);
-            }
+           // TODO: Implement parser
         }
 
         return ast;

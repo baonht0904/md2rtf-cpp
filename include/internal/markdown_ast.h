@@ -8,132 +8,198 @@
 
 namespace md2rtf::internal::markdown_ast
 {
-    enum class NodeType {
-        Document, Heading, Paragraph, Text, Emphasis, List, ListItem,
-        Link, Image, CodeBlock, InlineCode, Table, TableRow, TableCell,
-        Blockquote, HorizontalRule
+
+    enum class NodeType
+    {
+        Document,
+        Heading,
+        Paragraph,
+        BlockQuote,
+        List,
+        ListItem,
+        Table,
+        TableRow,
+        TableCell,
+        CodeBlock,
+        HorizontalRule,
+        Text,
+        Emphasis,
+        Strong,
+        Strikethrough,
+        InlineCode,
+        Link,
+        Image
     };
 
-    const std::set<NodeType> g_kBlockLevelNodeTypes = {
-        NodeType::Heading, NodeType::Paragraph, NodeType::List,
-        NodeType::Blockquote, NodeType::HorizontalRule, NodeType::Table
-    };
-
-    const std::set<NodeType> g_kInlineNodeTypes = {
-        NodeType::Text, NodeType::Emphasis, NodeType::Link,
-        NodeType::Image, NodeType::InlineCode
-    };
-
-    enum class EmphasisType { Bold, Italic, Strikethrough };
-    enum class ListType { Ordered, Unordered };
-
-    class Node {
+    // Base node
+    class Node
+    {
     public:
         NodeType type;
-        std::vector<std::shared_ptr<Node>> children;
         virtual ~Node() = default;
     };
 
-    class DocumentNode : public Node {
+    // Block node base
+    class BlockNode : public Node
+    {
     public:
+        virtual ~BlockNode() = default;
+    };
+
+    // Inline node base
+    class InlineNode : public Node
+    {
+    public:
+        virtual ~InlineNode() = default;
+    };
+
+    // Block nodes
+    class DocumentNode : public BlockNode
+    {
+    public:
+        std::vector<std::shared_ptr<BlockNode>> children;
         DocumentNode() { type = NodeType::Document; }
     };
 
-    class HeadingNode : public Node {
+    class HeadingNode : public BlockNode
+    {
     public:
         int level;
-        HeadingNode(int lvl = 1) : level(lvl) { type = NodeType::Heading; }
+        std::vector<std::shared_ptr<InlineNode>> children; // inline nodes
+        HeadingNode(int lvl) : level(lvl) { type = NodeType::Heading; }
     };
 
-    class ParagraphNode : public Node {
+    class ParagraphNode : public BlockNode
+    {
     public:
+        std::vector<std::shared_ptr<InlineNode>> children; // inline nodes
         ParagraphNode() { type = NodeType::Paragraph; }
     };
 
-    class TextNode : public Node {
+    class BlockquoteNode : public BlockNode
+    {
     public:
-        std::string text;
-        TextNode(const std::string& t) : text(t) { type = NodeType::Text; }
+        std::vector<std::shared_ptr<BlockNode>> children; // block nodes
+        BlockquoteNode() { type = NodeType::BlockQuote; }
     };
-
-    class EmphasisNode : public Node {
+    
+    class ListItemNode : public BlockNode
+    {
     public:
-        EmphasisType emphasisType;
-        EmphasisNode(EmphasisType et) : emphasisType(et) { type = NodeType::Emphasis; }
-    };
-
-    class ListNode : public Node {
-    public:
-        ListType listType;
-        int level;
-        ListNode(ListType lt, int lvl = 0) : listType(lt), level(lvl) { type = NodeType::List; }
-    };
-
-    class ListItemNode : public Node {
-    public:
+        std::vector<std::shared_ptr<BlockNode>> children; // block nodes
         ListItemNode() { type = NodeType::ListItem; }
     };
 
-    class LinkNode : public Node {
+    class ListNode : public BlockNode
+    {
     public:
-        std::string url;
-        std::string title;
-        LinkNode(const std::string& u, const std::string& t) : url(u), title(t) { type = NodeType::Link; }
+        bool ordered;
+        std::vector<std::shared_ptr<ListItemNode>> children; // list items
+        ListNode(bool ord) : ordered(ord) { type = NodeType::List; }
     };
 
-    class ImageNode : public Node {
+    class TableCellNode : public BlockNode
+    {
     public:
-        std::string url;
-        std::string altText;
-        ImageNode(const std::string& u, const std::string& a) : url(u), altText(a) { type = NodeType::Image; }
+        std::vector<std::shared_ptr<InlineNode>> children; // inline nodes
+        std::string align;
+        TableCellNode(const std::string &alignment = "") : align(alignment) { type = NodeType::TableCell; }
     };
 
-    class CodeBlockNode : public Node {
+    class TableRowNode : public BlockNode
+    {
     public:
-        std::string code;
-        CodeBlockNode(const std::string& c) : code(c) { type = NodeType::CodeBlock; }
+        bool isHeader;
+        std::vector<std::shared_ptr<TableCellNode>> children; // table cells
+        TableRowNode(bool header) : isHeader(header) { type = NodeType::TableRow; }
     };
 
-    class InlineCodeNode : public Node {
+    class TableNode : public BlockNode
+    {
     public:
-        std::string code;
-        InlineCodeNode(const std::string& c) : code(c) { type = NodeType::InlineCode; }
-    };
-
-    class TableNode : public Node {
-    public:
+        std::vector<std::shared_ptr<TableRowNode>> children; // table rows
         TableNode() { type = NodeType::Table; }
     };
 
-    class TableRowNode : public Node {
+    class CodeBlockNode : public BlockNode
+    {
     public:
-        TableRowNode() { type = NodeType::TableRow; }
+        std::string value;
+        std::string language;
+        CodeBlockNode(const std::string &val, const std::string &lang = "") : value(val), language(lang) { type = NodeType::CodeBlock; }
     };
 
-    class TableCellNode : public Node {
-    public:
-        TableCellNode() { type = NodeType::TableCell; }
-    };
-
-    class BlockquoteNode : public Node {
-    public:
-        BlockquoteNode() { type = NodeType::Blockquote; }
-    };
-
-    class HorizontalRuleNode : public Node {
+    class HorizontalRuleNode : public BlockNode
+    {
     public:
         HorizontalRuleNode() { type = NodeType::HorizontalRule; }
     };
 
-    class AST {
+    // Inline nodes
+    class TextNode : public InlineNode
+    {
+    public:
+        std::string value;
+        TextNode(const std::string &val) : value(val) { type = NodeType::Text; }
+    };
+
+    class EmphasisNode : public InlineNode
+    {
+    public:
+        std::vector<std::shared_ptr<InlineNode>> children;
+        EmphasisNode() { type = NodeType::Emphasis; }
+    };
+
+    class StrongNode : public InlineNode
+    {
+    public:
+        std::vector<std::shared_ptr<InlineNode>> children;
+        StrongNode() { type = NodeType::Strong; }
+    };
+
+    class StrikethroughNode : public InlineNode
+    {
+    public:
+        std::vector<std::shared_ptr<InlineNode>> children;
+        StrikethroughNode() { type = NodeType::Strikethrough; }
+    };
+
+    class InlineCodeNode : public InlineNode
+    {
+    public:
+        std::string value;
+        InlineCodeNode(const std::string &val) : value(val) { type = NodeType::InlineCode; }
+    };
+
+    class LinkNode : public InlineNode
+    {
+    public:
+        std::string url;
+        std::string title;
+        std::vector<std::shared_ptr<InlineNode>> children;
+        LinkNode(const std::string &u, const std::string &t = "") : url(u), title(t) { type = NodeType::Link; }
+    };
+
+    class ImageNode : public InlineNode
+    {
+    public:
+        std::string url;
+        std::string alt;
+        std::string title;
+        ImageNode(const std::string &u, const std::string &a = "", const std::string &t = "") : url(u), alt(a), title(t) { type = NodeType::Image; }
+    };
+
+    class AST
+    {
     public:
         std::shared_ptr<DocumentNode> root;
     };
 
-    class AstNodeFactory {
+    class AstNodeFactory
+    {
     public:
-        static std::shared_ptr<Node> CreateNode(const std::string& line);
-        static NodeType DetermineNodeType(const std::string& line);
+        static std::shared_ptr<Node> CreateNode(const std::string &line);
+        static NodeType DetermineBlockNodeType(const std::string &line);
     };
 
 } // namespace md2rtf::internal::markdown_ast
