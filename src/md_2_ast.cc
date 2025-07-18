@@ -11,7 +11,10 @@ namespace md2rtf::internal
 
     markdown_ast::AST ConvertMarkdownToAST(const std::string &markdown_string)
     {
-        using namespace md2rtf::internal::markdown_ast;
+        using markdown_ast::AST;
+        using markdown_ast::DocumentNode;
+        using markdown_ast::AstNodeFactory;
+
         AST ast;
         ast.root = std::make_shared<DocumentNode>();
 
@@ -46,6 +49,9 @@ namespace md2rtf::internal
 
     std::vector<std::string> BlockFinder::NextBlock()
     {
+        using markdown_ast::NodeType;
+        using markdown_ast::AstNodeFactory;
+
         std::vector<std::string> block;
         size_t len = markdown_.length();
 
@@ -55,7 +61,7 @@ namespace md2rtf::internal
 
         size_t line_end = FindLineEnd(pos_);
         std::string_view first_line = markdown_.substr(pos_, line_end - pos_);
-        markdown_ast::NodeType first_type = markdown_ast::AstNodeFactory::DetermineBlockNodeType(first_line);
+        NodeType first_type = AstNodeFactory::DetermineBlockNodeType(first_line);
         block.emplace_back(first_line);
         pos_ = SkipNewlineChars(line_end);
 
@@ -69,6 +75,9 @@ namespace md2rtf::internal
 
     void BlockFinder::CollectMultiLineBlock(std::vector<std::string> &block, markdown_ast::NodeType first_type)
     {
+        using markdown_ast::NodeType;
+        using markdown_ast::AstNodeFactory;
+
         size_t len = markdown_.length();
         while (pos_ < len)
         {
@@ -78,8 +87,8 @@ namespace md2rtf::internal
             if (IsLineEmptyOrWhitespace(next_line))
                 return;
 
-            if (markdown_ast::NodeType next_type = markdown_ast::AstNodeFactory::DetermineBlockNodeType(next_line);
-                next_type != first_type)
+            NodeType next_type = AstNodeFactory::DetermineBlockNodeType(next_line);
+            if (next_type != first_type)
                 return;
 
             block.emplace_back(next_line);
