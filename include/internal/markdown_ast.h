@@ -43,14 +43,14 @@ namespace md2rtf::internal::markdown_ast
     class BlockNode : public Node
     {
     public:
-        virtual ~BlockNode() = default;
+        ~BlockNode() override = default;
     };
 
     // Inline node base
     class InlineNode : public Node
     {
     public:
-        virtual ~InlineNode() = default;
+        ~InlineNode() override = default;
     };
 
     // Block nodes
@@ -66,7 +66,7 @@ namespace md2rtf::internal::markdown_ast
     public:
         int level;
         std::vector<std::shared_ptr<InlineNode>> children; // inline nodes
-        HeadingNode(int lvl) : level(lvl) { type = NodeType::Heading; }
+        explicit HeadingNode(int lvl) : level(lvl) { type = NodeType::Heading; }
     };
 
     class ParagraphNode : public BlockNode
@@ -76,11 +76,11 @@ namespace md2rtf::internal::markdown_ast
         ParagraphNode() { type = NodeType::Paragraph; }
     };
 
-    class BlockquoteNode : public BlockNode
+    class BlockQuoteNode : public BlockNode
     {
     public:
         std::vector<std::shared_ptr<BlockNode>> children; // block nodes
-        BlockquoteNode() { type = NodeType::BlockQuote; }
+        BlockQuoteNode() { type = NodeType::BlockQuote; }
     };
     
     class ListItemNode : public BlockNode
@@ -95,7 +95,7 @@ namespace md2rtf::internal::markdown_ast
     public:
         bool ordered;
         std::vector<std::shared_ptr<ListItemNode>> children; // list items
-        ListNode(bool ord) : ordered(ord) { type = NodeType::List; }
+        explicit ListNode(bool ord) : ordered(ord) { type = NodeType::List; }
     };
 
     class TableCellNode : public BlockNode
@@ -103,7 +103,7 @@ namespace md2rtf::internal::markdown_ast
     public:
         std::vector<std::shared_ptr<InlineNode>> children; // inline nodes
         std::string align;
-        TableCellNode(const std::string &alignment = "") : align(alignment) { type = NodeType::TableCell; }
+        explicit TableCellNode(const std::string &alignment = "") : align(alignment) { type = NodeType::TableCell; }
     };
 
     class TableRowNode : public BlockNode
@@ -111,7 +111,7 @@ namespace md2rtf::internal::markdown_ast
     public:
         bool isHeader;
         std::vector<std::shared_ptr<TableCellNode>> children; // table cells
-        TableRowNode(bool header) : isHeader(header) { type = NodeType::TableRow; }
+        explicit TableRowNode(bool header) : isHeader(header) { type = NodeType::TableRow; }
     };
 
     class TableNode : public BlockNode
@@ -140,7 +140,7 @@ namespace md2rtf::internal::markdown_ast
     {
     public:
         std::string value;
-        TextNode(const std::string &val) : value(val) { type = NodeType::Text; }
+        explicit TextNode(const std::string &val) : value(val) { type = NodeType::Text; }
     };
 
     class EmphasisNode : public InlineNode
@@ -168,7 +168,7 @@ namespace md2rtf::internal::markdown_ast
     {
     public:
         std::string value;
-        InlineCodeNode(const std::string &val) : value(val) { type = NodeType::InlineCode; }
+        explicit InlineCodeNode(const std::string &val) : value(val) { type = NodeType::InlineCode; }
     };
 
     class LinkNode : public InlineNode
@@ -198,8 +198,17 @@ namespace md2rtf::internal::markdown_ast
     class AstNodeFactory
     {
     public:
-        static std::shared_ptr<Node> CreateNode(const std::string &line);
-        static NodeType DetermineBlockNodeType(const std::string &line);
+        static std::shared_ptr<BlockNode> CreateBlockNode(const std::vector<std::string> &lines);
+        static NodeType DetermineBlockNodeType(std::string_view line);
+
+        // Block node creators
+        static std::shared_ptr<ParagraphNode> CreateParagraphNode(const std::vector<std::string> &lines);
+        static std::shared_ptr<HeadingNode> CreateHeadingNode(const std::vector<std::string> &lines);
+        static std::shared_ptr<BlockQuoteNode> CreateBlockQuoteNode(const std::vector<std::string> &lines);
+        static std::shared_ptr<ListNode> CreateListNode(const std::vector<std::string> &lines);
+        static std::shared_ptr<CodeBlockNode> CreateCodeBlockNode(const std::vector<std::string> &lines);
+        static std::shared_ptr<HorizontalRuleNode> CreateHorizontalRuleNode(const std::vector<std::string> &lines);
+        static std::shared_ptr<TableNode> CreateTableNode(const std::vector<std::string> &lines);
     };
 
 } // namespace md2rtf::internal::markdown_ast
