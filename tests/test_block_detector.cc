@@ -326,16 +326,17 @@ TEST(BlockDetectorTest, NextBlock_Table) {
      */
 }
 
-TEST(BlockDetectorTest, NextBlock_CodeBlock) {
+TEST(BlockDetectorTest, NextBlock_FencedCodeBlock) {
     {
         // Fenced code block with backticks
         BlockDetector detector("```\nCode line 1\nCode line 2\n```");
         BlockData block = detector.NextBlock();
         ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
-        ASSERT_EQ(block.GetLines().size(), 3);
+        ASSERT_EQ(block.GetLines().size(), 4);
         EXPECT_EQ(block.GetLines()[0], "```");
         EXPECT_EQ(block.GetLines()[1], "Code line 1");
         EXPECT_EQ(block.GetLines()[2], "Code line 2");
+        EXPECT_EQ(block.GetLines()[3], "```");
     }
 
     {
@@ -343,20 +344,11 @@ TEST(BlockDetectorTest, NextBlock_CodeBlock) {
         BlockDetector detector("~~~\nCode line A\nCode line B\n~~~");
         BlockData block = detector.NextBlock();
         ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
-        ASSERT_EQ(block.GetLines().size(), 3);
+        ASSERT_EQ(block.GetLines().size(), 4);
         EXPECT_EQ(block.GetLines()[0], "~~~");
         EXPECT_EQ(block.GetLines()[1], "Code line A");
         EXPECT_EQ(block.GetLines()[2], "Code line B");
-    }
-
-    {
-        // Indented code block
-        BlockDetector detector("    Indented code line 1\n    Indented code line 2");
-        BlockData block = detector.NextBlock();
-        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
-        ASSERT_EQ(block.GetLines().size(), 2);
-        EXPECT_EQ(block.GetLines()[0], "    Indented code line 1");
-        EXPECT_EQ(block.GetLines()[1], "    Indented code line 2");
+        EXPECT_EQ(block.GetLines()[3], "~~~");
     }
 
     {
@@ -402,6 +394,76 @@ TEST(BlockDetectorTest, NextBlock_CodeBlock) {
      * TODO: Add tests for more complex code blocks, such as those with language annotations, mixed content, and nested code blocks.
      */
 }
+
+TEST(BlockDetectorTest, NextBlock_IntentedCodeBlock) {
+    {
+        // Indented code block with spaces
+        BlockDetector detector("    Indented code line 1\n    Indented code line 2");
+        BlockData block = detector.NextBlock();
+        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(block.GetLines().size(), 2);
+        EXPECT_EQ(block.GetLines()[0], "    Indented code line 1");
+        EXPECT_EQ(block.GetLines()[1], "    Indented code line 2");
+    }
+
+    {
+        // Indented code block with tabs
+        BlockDetector detector("\tIndented code line 1\n\tIndented code line 2");
+        BlockData block = detector.NextBlock();
+        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(block.GetLines().size(), 2);
+        EXPECT_EQ(block.GetLines()[0], "\tIndented code line 1");
+        EXPECT_EQ(block.GetLines()[1], "\tIndented code line 2");
+    }
+
+    {
+        // Indented code block with leading empty lines
+        BlockDetector detector("\n\n    Indented code with leading empty lines\nNext line.");
+        BlockData block = detector.NextBlock();
+        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(block.GetLines().size(), 2);
+        EXPECT_EQ(block.GetLines()[0], "    Indented code with leading empty lines");
+        EXPECT_EQ(block.GetLines()[1], "Next line.");
+    }
+
+    {
+        // Indented code block with trailing empty lines
+        BlockDetector detector("    Indented code with trailing empty lines\n\nNext line.");
+        BlockData block = detector.NextBlock();
+        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(block.GetLines().size(), 1);
+        EXPECT_EQ(block.GetLines()[0], "    Indented code with trailing empty lines");
+    }
+
+    {
+        // Multiple indented code blocks with an empty line in between
+        BlockDetector detector("    First indented code block\n\n\tSecond indented code block");
+        BlockData block = detector.NextBlock();
+        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(block.GetLines().size(), 1);
+        EXPECT_EQ(block.GetLines()[0], "    First indented code block");
+
+        auto next_block = detector.NextBlock();
+        ASSERT_EQ(next_block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(next_block.GetLines().size(), 1);
+        EXPECT_EQ(next_block.GetLines()[0], "\tSecond indented code block");
+    }
+
+    {
+        // Indented code block with mixed spaces and tabs
+        BlockDetector detector("    Indented code line 1\n\tIndented code line 2");
+        BlockData block = detector.NextBlock();
+        ASSERT_EQ(block.GetType(), NodeType::CodeBlock);
+        ASSERT_EQ(block.GetLines().size(), 2);
+        EXPECT_EQ(block.GetLines()[0], "    Indented code line 1");
+        EXPECT_EQ(block.GetLines()[1], "\tIndented code line 2");
+    }
+
+    /**
+     * TODO: Add tests for more complex code blocks, such as those with language annotations, mixed content, and nested code blocks.
+     */
+}
+
 
 TEST(BlockDetectorTest, NextBlock_HorizontalRule) {
     {
@@ -449,7 +511,6 @@ TEST(BlockDetectorTest, NextBlock_HorizontalRule) {
         ASSERT_EQ(next_next_block.GetLines().size(), 1);
         EXPECT_EQ(next_next_block.GetLines()[0], "---");
     }
-
 
     {
         // Multiple horizontal rules

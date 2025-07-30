@@ -38,9 +38,13 @@ namespace md2rtf::internal::markdown_ast
     protected:
         void SkipEmptyLines();
         std::string_view NextLine(size_t pos) const;
-        void CollectOtherLinesOfBlock(BlockData &block);
         void MoveCurrentPositionPassLine(std::string_view line);
-        
+
+        // Multiple lines collection
+        void GatherContiguousBlockLines(BlockData &block);
+        void CollectDefaultBlockLines(BlockData &block);
+        void CollectCodeBlockLines(BlockData &block);
+
     private:
         size_t current_position_;
         std::string_view markdown_content_;

@@ -38,7 +38,7 @@ namespace md2rtf::internal::helpers
 
         bool is_indented_code_block(std::string_view sv)
         {
-            return sv.starts_with("    ");
+            return sv.starts_with("    ") || sv.starts_with("\t");
         }
 
         bool is_horizontal_rule(std::string_view sv)

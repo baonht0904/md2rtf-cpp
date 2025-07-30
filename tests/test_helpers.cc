@@ -28,6 +28,9 @@ TEST(HelperTest, DetermineNodeType_BlockTypes) {
 
     // Code Block
     EXPECT_EQ(DetermineBlockType("```cpp\nint main() { return 0;}\n```"), CodeBlock);
+    EXPECT_EQ(DetermineBlockType("~~~\nCode block content\n~~~"), CodeBlock);
+    EXPECT_EQ(DetermineBlockType("    Indented code block"), CodeBlock);
+    EXPECT_EQ(DetermineBlockType("\tIndented code block"), CodeBlock);
 
     // Horizontal Rule
     EXPECT_EQ(DetermineBlockType("---"), HorizontalRule);
