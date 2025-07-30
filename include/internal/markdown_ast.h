@@ -8,7 +8,6 @@
 
 namespace md2rtf::internal::markdown_ast
 {
-
     enum class NodeType
     {
         Document,
@@ -193,22 +192,6 @@ namespace md2rtf::internal::markdown_ast
     {
     public:
         std::shared_ptr<DocumentNode> root;
-    };
-
-    class AstNodeFactory
-    {
-    public:
-        static std::shared_ptr<BlockNode> CreateBlockNode(const std::vector<std::string> &lines);
-        static NodeType DetermineBlockNodeType(std::string_view line);
-
-        // Block node creators
-        static std::shared_ptr<ParagraphNode> CreateParagraphNode(const std::vector<std::string> &lines);
-        static std::shared_ptr<HeadingNode> CreateHeadingNode(const std::vector<std::string> &lines);
-        static std::shared_ptr<BlockQuoteNode> CreateBlockQuoteNode(const std::vector<std::string> &lines);
-        static std::shared_ptr<ListNode> CreateListNode(const std::vector<std::string> &lines);
-        static std::shared_ptr<CodeBlockNode> CreateCodeBlockNode(const std::vector<std::string> &lines);
-        static std::shared_ptr<HorizontalRuleNode> CreateHorizontalRuleNode(const std::vector<std::string> &lines);
-        static std::shared_ptr<TableNode> CreateTableNode(const std::vector<std::string> &lines);
     };
 
 } // namespace md2rtf::internal::markdown_ast

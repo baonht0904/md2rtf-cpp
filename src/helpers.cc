@@ -1,63 +1,94 @@
 #include "internal/helpers.h"
 
-#include <string>
-#include <vector>
+#include <algorithm>
+#include <regex>
+#include <string_view>
+
+#include "internal/markdown_ast.h"
 
 namespace md2rtf::internal::helpers
 {
-    bool StartsWith(const std::string& str, const std::string& prefix)
+    namespace determine_block_type
     {
-        return str.compare(0, prefix.length(), prefix) == 0;
-    }
-
-    bool StartsWithAnyOf(const std::string& str, const std::vector<std::string>& prefixes)
-    {
-        if(str.empty() && prefixes.empty())
+        bool is_heading(std::string_view sv)
         {
-            return true;
+            return sv.starts_with("#");
         }
 
-        for (const auto& prefix : prefixes)
+        bool is_blockquote(std::string_view sv)
         {
-            if (StartsWith(str, prefix))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool EndsWith(const std::string& str, const std::string& suffix)
-    {
-        if (suffix.length() > str.length())
-            return false;
-        return str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0;
-    }
-
-    bool EndsWithAnyOf(const std::string& str, const std::vector<std::string>& suffixes)
-    {
-        if(str.empty() && suffixes.empty())
-        {
-            return true;
+            return sv.starts_with(">");
         }
 
-        for (const auto& suffix : suffixes)
+        bool is_unordered_list(std::string_view sv)
         {
-            if (EndsWith(str, suffix))
-            {
-                return true;
-            }
+            return sv.starts_with("- ") || sv.starts_with("* ") || sv.starts_with("+ ");
         }
-        return false;
-    }
 
-    std::string Trim(const std::string& str)
+        bool is_ordered_list(std::string_view line)
+        {
+            static const std::regex ordered_list_re(R"(^\d+\.\s)");
+            return std::regex_search(line.data(), ordered_list_re);
+        }
+
+        bool is_fenced_code_block(std::string_view sv)
+        {
+            return sv.starts_with("```") || sv.starts_with("~~~");
+        }
+
+        bool is_indented_code_block(std::string_view sv)
+        {
+            return sv.starts_with("    ");
+        }
+
+        bool is_horizontal_rule(std::string_view sv)
+        {
+            return sv == "---" || sv == "***" || sv == "___";
+        }
+
+        bool is_table(std::string_view sv)
+        {
+            return sv.contains('|');
+        }
+    } // namespace determine_block_type
+
+    markdown_ast::NodeType DetermineBlockType(std::string_view line)
     {
-        size_t first = str.find_first_not_of(" \t\n\r");
-        if (first == std::string::npos)
-            return ""; // String is all whitespace
+        using enum md2rtf::internal::markdown_ast::NodeType;
+        using namespace determine_block_type;
 
-        size_t last = str.find_last_not_of(" \t\n\r");
-        return str.substr(first, last - first + 1);
+        if (is_heading(line))
+            return Heading;
+        if (is_blockquote(line))
+            return BlockQuote;
+        if (is_unordered_list(line))
+            return List;
+        if (is_ordered_list(line))
+            return List;
+        if (is_fenced_code_block(line))
+            return CodeBlock;
+        if (is_indented_code_block(line))
+            return CodeBlock;
+        if (is_horizontal_rule(line))
+            return HorizontalRule;
+        if (is_table(line))
+            return Table;
+
+        return Paragraph;
     }
+
+    bool IsMultipleLineType(markdown_ast::NodeType type)
+    {
+        using enum md2rtf::internal::markdown_ast::NodeType;
+        auto multiple_line_types = {
+            BlockQuote, List, CodeBlock, Paragraph, Table
+        };
+        return std::ranges::find(multiple_line_types, type) != multiple_line_types.end();
+    }
+
+    bool IsEmptyLineOrWhitespace(std::string_view line)
+    {
+        return line.empty() || std::ranges::all_of(line, [](char c) { return std::isspace(c); });
+    }
+
 } // namespace md2rtf::internal::helpers

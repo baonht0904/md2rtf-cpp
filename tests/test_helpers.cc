@@ -1,48 +1,39 @@
-#include "internal/helpers.h"
 #include <gtest/gtest.h>
 
-TEST(HelpersTest, StartsWith) {
+#include "internal/helpers.h"
+
+
+TEST(HelperTest, DetermineNodeType_BlockTypes) {
     using namespace md2rtf::internal::helpers;
+    using  enum md2rtf::internal::markdown_ast::NodeType;
 
-    EXPECT_TRUE(StartsWith("Hello, World!", "Hello"));
-    EXPECT_FALSE(StartsWith("Hello, World!", "World"));
-    EXPECT_TRUE(StartsWith("", ""));
-    EXPECT_FALSE(StartsWith("Test", "Test123"));
-}
+    // Heading
+    EXPECT_EQ(DetermineBlockType("# Heading"), Heading);
+    EXPECT_EQ(DetermineBlockType("## Heading2"), Heading);
 
-TEST(HelpersTest, StartsWithAnyOf) {
-    using namespace md2rtf::internal::helpers;
+    // Paragraph (default)
+    EXPECT_EQ(DetermineBlockType("This is a paragraph."), Paragraph);
 
-    EXPECT_TRUE(StartsWithAnyOf("Hello, World!", {"Hello", "World"}));
-    EXPECT_FALSE(StartsWithAnyOf("Hello, World!", {"Goodbye", "World"}));
-    EXPECT_TRUE(StartsWithAnyOf("", {})); // Empty prefixes should return false
-    EXPECT_FALSE(StartsWithAnyOf("Test", {"Test123", "Test456"}));
-}
+    // Blockquote
+    EXPECT_EQ(DetermineBlockType("> Blockquote"), BlockQuote);
 
-TEST(HelpersTest, EndsWith) {
-    using namespace md2rtf::internal::helpers;
+    // Unordered List
+    EXPECT_EQ(DetermineBlockType("- Item"), List);
+    EXPECT_EQ(DetermineBlockType("* Item"), List);
+    EXPECT_EQ(DetermineBlockType("+ Item"), List);
 
-    EXPECT_TRUE(EndsWith("Hello, World!", "World!"));
-    EXPECT_FALSE(EndsWith("Hello, World!", "Hello"));
-    EXPECT_TRUE(EndsWith("", ""));
-    EXPECT_FALSE(EndsWith("Test", "Test123"));
-}
+    // Ordered List
+    EXPECT_EQ(DetermineBlockType("1. Item"), List);
+    EXPECT_EQ(DetermineBlockType("2. Item"), List);
 
-TEST(HelpersTest, EndsWithAnyOf) {
-    using namespace md2rtf::internal::helpers;
+    // Code Block
+    EXPECT_EQ(DetermineBlockType("```cpp\nint main() { return 0;}\n```"), CodeBlock);
 
-    EXPECT_TRUE(EndsWithAnyOf("Hello, World!", {"World!", "Hello"}));
-    EXPECT_FALSE(EndsWithAnyOf("Hello, World!", {"Goodbye", "World"}));
-    EXPECT_TRUE(EndsWithAnyOf("", {})); // Empty suffixes should return false
-    EXPECT_FALSE(EndsWithAnyOf("Test", {"Test123", "Test456"}));
-}
+    // Horizontal Rule
+    EXPECT_EQ(DetermineBlockType("---"), HorizontalRule);
+    EXPECT_EQ(DetermineBlockType("***"), HorizontalRule);
+    EXPECT_EQ(DetermineBlockType("___"), HorizontalRule);
 
-TEST(HelpersTest, Trim) {
-    using namespace md2rtf::internal::helpers;
-
-    EXPECT_EQ(Trim("   Hello, World!   "), "Hello, World!");
-    EXPECT_EQ(Trim("Hello, World!"), "Hello, World!");
-    EXPECT_EQ(Trim("   "), "");
-    EXPECT_EQ(Trim(""), "");
-    EXPECT_EQ(Trim("\n\t Hello \t\n"), "Hello");
+    // Table
+    EXPECT_EQ(DetermineBlockType("| Name | Age |"), Table);
 }

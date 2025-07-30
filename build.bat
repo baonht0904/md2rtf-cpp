@@ -9,14 +9,7 @@ if not exist %BUILD_DIR% (
 
 cd %BUILD_DIR%
 
-cmake -G "MinGW Makefiles" ..
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build .
-
-@REM if %ERRORLEVEL% EQU 0 (
-@REM     echo Build succeeded. Running tests...
-@REM     ctest --output-on-failure
-@REM ) else (
-@REM     echo Build failed. Tests will not run.
-@REM )
 
 cd ..
