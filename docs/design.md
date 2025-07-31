@@ -232,3 +232,5 @@ Support for Basic Markdown Elements
 | Inline Code   | `` `code` ``                     | `\fN` (monospace font)                     |
 | Link          | `[text](url)`                    | `{\field{\*\fldinst HYPERLINK "url"}{\fldrslt text}}` |
 | Image         | `![alt](url)`                    | `{\pict ...}` (embedded image)             |
+
+## 6. Parser design

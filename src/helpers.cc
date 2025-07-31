@@ -91,4 +91,10 @@ namespace md2rtf::internal::helpers
         return line.empty() || std::ranges::all_of(line, [](char c) { return std::isspace(c); });
     }
 
+    bool IsIndentedCodeLine(std::string_view line)
+    {
+        // Check if the line starts with 4 spaces or a tab
+        return line.starts_with("    ") || line.starts_with("\t");
+    }
+
 } // namespace md2rtf::internal::helpers

@@ -44,6 +44,8 @@ namespace md2rtf::internal::markdown_ast
         void GatherContiguousBlockLines(BlockData &block);
         void CollectDefaultBlockLines(BlockData &block);
         void CollectCodeBlockLines(BlockData &block);
+        void CollectFencedCodeBlockLines(BlockData &block);
+        void CollectIndentedCodeBlockLines(BlockData &block);
 
     private:
         size_t current_position_;

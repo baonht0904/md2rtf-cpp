@@ -89,7 +89,7 @@ namespace md2rtf::internal::markdown_ast
 
     std::string_view BlockDetector::NextLine(size_t pos) const
     {
-        size_t line_end = markdown_content_.find('\n', pos);
+        size_t line_end = markdown_content_.find_first_of("\r\n", pos);
         if (line_end == std::string_view::npos)
         {
             line_end = markdown_content_.length();
@@ -152,38 +152,58 @@ namespace md2rtf::internal::markdown_ast
             return; // No lines to collect
         }
 
-        // For code blocks, we need to handle both fenced and indented code blocks
-        // Determine the type of code block based on the first line
-        // and set a stop condition for collecting lines.
-        auto code_block_marker = block.GetLines().front();
-        std::function<bool(std::string_view)> stop_condition;
-
-        if (code_block_marker.starts_with("```") || code_block_marker.starts_with("~~~"))
+        // Determine if this is a fenced or indented code block
+        if (helpers::IsIndentedCodeLine(block.GetLines().front()))
         {
-            // For fenced code blocks, stop at the closing marker
-            stop_condition = [code_block_marker](std::string_view line) {
-                return line == code_block_marker;
-            };
+            CollectIndentedCodeBlockLines(block);
         }
         else
         {
-            // For indented code blocks, stop at an empty line
-            stop_condition = [](std::string_view line) {
-                return helpers::IsEmptyLineOrWhitespace(line);
-            };
+            CollectFencedCodeBlockLines(block);
         }
+    }
 
-        // Collect lines for code blocks
+    void BlockDetector::CollectFencedCodeBlockLines(BlockData &block)
+    {
+        // Determine the fence marker used to start the block
+        const std::string& first_line = block.GetLines().front();
+        std::string fence_marker;
+        if (first_line.starts_with("```"))
+            fence_marker = "```";
+        else if (first_line.starts_with("~~~"))
+            fence_marker = "~~~";
+
+        // Collect lines for fenced code blocks
         while (HasMore())
         {
             auto next_line = NextLine(current_position_);
-            
+            if (!fence_marker.empty() && next_line.starts_with(fence_marker))
+            {
+                // Stop at the closing marker
+                MoveCurrentPositionPassLine(next_line);
+                break;
+            }
+
             block.AddLine(next_line);
             MoveCurrentPositionPassLine(next_line);
+        }
+    }
 
-            if (stop_condition(next_line))
+    void BlockDetector::CollectIndentedCodeBlockLines(BlockData &block)
+    {
+        while (HasMore())
+        {
+            auto next_line = NextLine(current_position_);
+            // Accept blank lines or lines indented by 4+ spaces
+            if (helpers::IsEmptyLineOrWhitespace(next_line) ||
+                helpers::IsIndentedCodeLine(next_line))
             {
-                break;
+                block.AddLine(next_line);
+                MoveCurrentPositionPassLine(next_line);
+            }
+            else
+            {
+                break; // End of indented code block
             }
         }
     }
