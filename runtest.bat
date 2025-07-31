@@ -1,21 +1,19 @@
 @echo off
-REM Run all *test.exe files in build directory for md2rtf-cpp project
+REM Set CMake generator to MinGW Makefiles and build the project
 
 set BUILD_DIR=build
+
 if not exist %BUILD_DIR% (
-    echo Build directory does not exist. Please run build.bat first.
-    exit /b 1
-)
-cd /d "%BUILD_DIR%"
-
-REM Loop through all *test.exe files and run them
-for %%F in (*test.exe) do (
-    echo Running %%F...
-    "%%F"
-    if errorlevel 1 (
-        echo Test failed: %%F
-    )
+    mkdir %BUILD_DIR%
 )
 
-REM Return to original directory
-cd /d "%~dp0"
+cd %BUILD_DIR%
+
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" ..
+cmake --build .
+ctest --output-on-failure
+
+REM Run gcov from the build directory
+gcov CMakeFiles\md2rtf-cpp.dir\src\block_detector.cc.gcno
+
+cd ..
